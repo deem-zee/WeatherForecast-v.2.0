@@ -1,11 +1,10 @@
 <template>
     <div id="component">
-        <!-- <h1>{{header}}</h1> -->
         <div class="container">
             <div id="geo"><h2>{{city}}</h2></div>
             <div id="mainInfo">
-                <div id="temp"><p>{{tempSign}} {{currentTemp}}</p><span style="font-size:48px">&#xb0;</span></div>
-                 <div id="icon"><img :src= "iconPath" alt=""></div>
+                <div id="temp"><p>{{tempSign}} {{currentTemp}}</p><span class="celsius" >&#xb0;</span></div>
+                 <div id="icon"><img :src= "icon" alt=""></div>
             </div>
             
             <p id="description">{{description}}</p>
@@ -14,16 +13,16 @@
 
         <div id="soon">
             <div v-for="(day, idx) in futureWeather" :key="idx">
-                <p class="hours">{{day.dt_txt.split(' ')[1].slice(0, 5)}}</p>
-                <div><img :src="require(`../assets/iconList/${day.weather[0].icon}.png`)" alt=""> </div>
-                <div class="soonTemp"><span>{{tempSign}}{{Math.round(day.main.temp)}}&#xb0;</span></div>
+                <p class="hours">{{day.time}}</p>
+                <div><img :src="require(`../assets/iconList/${day.img}.png`)" alt=""> </div>
+                <div class="soonTemp"><span>{{tempSign}}{{Math.round(day.temp)}}&#xb0;</span></div>
             </div>
             
         </div>
 
         <div id="addInfo">  
             <div id="pressure" class="addInfo-div"> <img src="../assets/barometer.png" alt=""> <p>{{pascalToHg}} мм. рт. ст.</p></div>
-            <div  id="humidity" class="addInfo-div"><img src="../assets/Hygrometer.png" alt=""><p> {{humidity}}%</p></div>
+            <div id="humidity" class="addInfo-div"><img src="../assets/Hygrometer.png" alt=""><p> {{humidity}}%</p></div>
             <div id="wind" class="addInfo-div"> <img src="../assets/wind.png" alt="" > <p>{{wind}} м/c</p></div>
         </div>
 
@@ -38,6 +37,10 @@
 </template>
 
 <script>
+
+import { format } from 'date-fns'
+const coefPsToHg = 0.750063755419211;
+
 export default {
     props:[
         'header',
@@ -61,30 +64,18 @@ export default {
              
         }
     },
-    methods: {
-        // eslint-disable-next-line
-        citySearch() {
-            let cityName = this.search;
-            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru`)
-            .then(response => console.log(response.json()))
-        }
-    },
+    
     computed: {
-        iconPath() {
-            return this.icon + "@2x.png";
-        },
         feelsLikeSign() {
-            if(this.feelsLike > 0) {return '+' + this.feelsLike;}
-            return this.feelsLike;
+            return this.feelsLike > 0 ?  '+' + this.feelsLike : this.feelsLike < 0 ?
+             '-' + this.feelsLike : this.feelsLike;
         },
         tempSign() {
-            if(this.currentTemp > 0) {
-                return '+';
-            }
-            return '-';
+            return this.currentTemp > 0 ?  '+'  : this.currentTemp > 0 ? 
+             '-' : '';
         },
         pascalToHg() {
-            return Math.round(this.pressure * 0.750063755419211);
+            return Math.round(this.pressure * coefPsToHg);
         },
         getSunrise() {
             return this.sunrise.toString().split(' ')[4];
@@ -100,8 +91,7 @@ export default {
         
         .then(data => {
             this.data = data;
-            console.log(data);
-            this.icon = "http://openweathermap.org/img/wn/" + this.data.list[0].weather[0].icon;
+            this.icon = `http://openweathermap.org/img/wn/${this.data.list[0].weather[0].icon}@2x.png`;
             this.feelsLike = Math.round(data.list[0].main.feels_like);
             this.currentTemp = Math.round(data.list[0].main.temp)
             this.description = data.list[0].weather[0].description;
@@ -112,13 +102,14 @@ export default {
             this.sunrise = new Date(data.city.sunrise * 1000);
             this.sunset = new Date(data.city.sunset * 1000);
             for(let i = 1; i < 6; i++) {
-                this.futureWeather.push(data.list[i])
+                let day = {
+                    temp: data.list[i].main.temp,
+                    time: format(new Date(data.list[i].dt_txt), "HH:mm"),
+                    img: data.list[i].weather[0].icon
+                }
+                this.futureWeather.push(day);
             }
-            //  fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${data.city.coord.lat}&lon=${data.city.coord.lon}&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru`)
-            // .then(response => console.log(response.json()))
-            // .then(result => console.log(result))
-            }); 
-           
+        });      
     },
 }
 </script>
@@ -127,10 +118,6 @@ export default {
 
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro&family=Comfortaa:wght@300;400;500;600&family=Inter&family=Noto+Sans+Display&family=Ubuntu:wght@300&display=swap');
 
-/* font-family: 'Be Vietnam Pro', sans-serif;
-font-family: 'Comfortaa', cursive;
-font-family: 'Ubuntu', sans-serif; */
-/* font-family: 'Noto Sans Display', sans-serif; */
 
 @media screen and (min-width: 320px) {
     
@@ -196,6 +183,7 @@ font-family: 'Ubuntu', sans-serif; */
    #temp > .celsius  {
     content: '\2103';
     font-family: 'Ubuntu', sans-serif;
+    font-size: 48px;
 
    }
 
@@ -355,6 +343,8 @@ font-family: 'Ubuntu', sans-serif; */
    #temp > .celsius  {
     content: '\2103';
     font-family: 'Ubuntu', sans-serif;
+    position: relative;
+    top: 25px;
 
    }
 
@@ -463,9 +453,19 @@ font-family: 'Ubuntu', sans-serif; */
 
 }
 
-/* cтили для монитора пк min-width: 1280px */
-@media screen and (min-width: 1280px) {
+/* cтили для монитора пк min-width: 1024px */
+@media screen and (min-width: 1024px) {
+    #component {
+        width: 768px;
+        margin: 20px auto;
+    }
+    #temp > .celsius  {
+    content: '\2103';
+    font-family: 'Ubuntu', sans-serif;
+    position: relative;
+    top: 25px;
 
+   }
 }
 
 
