@@ -1,6 +1,10 @@
 <template>
     <div id="component">
         <div class="container">
+            <button @click="currentGeoWeather" class="returnToCurrentGeo"></button>
+            <!-- <img src="../assets/geo.png" alt=""> -->
+            <input type="text" placeholder="поиск" class="container__search" v-model="search" @keyup.enter="searchForCity">
+            <button @click="searchForCity" class="container__search__btn">найти!</button>
             <div id="geo"><h2>{{city}}</h2></div>
             <div id="mainInfo">
                 <div id="temp"><p>{{tempSign}} {{currentTemp}}</p><span class="celsius" >&#xb0;</span></div>
@@ -11,7 +15,7 @@
             <p id="feelsLike">Ощущается как: {{feelsLikeSign}}<span>&#xb0;</span></p>
         </div>  
 
-        <div id="soon">
+        <div v-if="!futureWeatherHide" id="soon">
             <div v-for="(day, idx) in futureWeather" :key="idx">
                 <p class="hours">{{day.time}}</p>
                 <div><img :src="require(`../assets/iconList/${day.img}.png`)" alt=""> </div>
@@ -50,7 +54,7 @@ export default {
             data: {},
             city: '',
             icon: '',
-            search: null,
+            search: '',
             citiesFound: [],
             feelsLike: null,
             description: '',
@@ -61,10 +65,64 @@ export default {
             sunrise: '',
             sunset: '',
             futureWeather: [],
+            futureWeatherHide: false,
              
         }
     },
     
+    methods: {
+        searchForCity() {
+            if(this.search !== '') {
+                fetch(`https://api.openweathermap.org/data/2.5/weather?q=${this.search}&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru`)
+                .then(result => result.json())
+                .then(data => {
+                console.log(data);
+                this.data = data;
+                this.icon = `http://openweathermap.org/img/wn/${this.data.weather[0].icon}@2x.png`;
+                this.feelsLike = Math.round(data.main.feels_like);
+                this.currentTemp = Math.round(data.main.temp)
+                this.description = data.weather[0].description;
+                this.humidity = data.main.humidity;
+                this.city = `${data.name}, ${data.sys.country}`;
+                this.pressure = data.main.pressure;
+                this.wind = data.wind.speed;
+                this.sunrise = new Date(data.sys.sunrise * 1000);
+                this.sunset = new Date(data.sys.sunset * 1000);
+                this.futureWeatherHide = true;
+                }); 
+            }
+            
+        
+        },
+        currentGeoWeather() {
+            this.futureWeatherHide = false;
+            this.futureWeather = [];
+            fetch('http://api.openweathermap.org/data/2.5/forecast?id=524901&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru')
+        .then(result => result.json())
+        .then(data => {
+            this.data = data;
+            this.icon = `http://openweathermap.org/img/wn/${this.data.list[0].weather[0].icon}@2x.png`;
+            this.feelsLike = Math.round(data.list[0].main.feels_like);
+            this.currentTemp = Math.round(data.list[0].main.temp)
+            this.description = data.list[0].weather[0].description;
+            this.humidity = data.list[0].main.humidity;
+            this.city = data.city.name;
+            this.pressure = data.list[0].main.pressure;
+            this.wind = data.list[0].wind.speed;
+            this.sunrise = new Date(data.city.sunrise * 1000);
+            this.sunset = new Date(data.city.sunset * 1000);
+            for(let i = 1; i < 6; i++) {
+                let day = {
+                    temp: data.list[i].main.temp,
+                    time: format(new Date(data.list[i].dt_txt), "HH:mm"),
+                    img: data.list[i].weather[0].icon
+                }
+                this.futureWeather.push(day);
+            }
+        });      
+        }
+    },
+
     computed: {
         feelsLikeSign() {
             return this.feelsLike > 0 ?  '+' + this.feelsLike : this.feelsLike < 0 ?
@@ -86,9 +144,10 @@ export default {
 
     },
     created() {
+        
+        
         fetch('http://api.openweathermap.org/data/2.5/forecast?id=524901&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru')
         .then(result => result.json())
-        
         .then(data => {
             this.data = data;
             this.icon = `http://openweathermap.org/img/wn/${this.data.list[0].weather[0].icon}@2x.png`;
@@ -274,6 +333,36 @@ export default {
         border-radius: 10px;
         margin: 5px 0;
     }
+    .container__search {
+    width: 200px;
+    height: 30px;
+    font-size: 20px;
+   }
+   .returnToCurrentGeo {
+    background-image: url('../assets/geo.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 35px;
+    height: 35px;
+    background-color: transparent;
+    position: relative;
+    top: 10px;
+    left: -10px;
+    padding: 2px;
+    /* border: 1px solid white; */
+    border: none;
+
+   }
+   .returnToCurrentGeo:hover {
+    cursor: pointer;
+   }
+   .container__search__btn {
+    width: 50px;
+    height: 35px;
+    position: relative;
+    top: -2px;
+    font-size: 13px;
+   }
 
 }
 
@@ -449,7 +538,36 @@ export default {
         border-radius: 10px;
         margin: 5px 0;
     }
+       .container__search {
+    width: 400px;
+    height: 40px;
+    font-size: 28px;
+   }
+   .returnToCurrentGeo {
+    background-image: url('../assets/geo.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 45px;
+    height: 45px;
+    background-color: transparent;
+    position: relative;
+    top: 10px;
+    left: -10px;
+    padding: 2px;
+    /* border: 1px solid white; */
+    border: none;
 
+   }
+   .returnToCurrentGeo:hover {
+    cursor: pointer;
+   }
+   .container__search__btn {
+    width: 80px;
+    height: 46px;
+    position: relative;
+    top: -3px;
+    font-size: 18px;
+   }
 
 }
 
@@ -465,6 +583,36 @@ export default {
     position: relative;
     top: 25px;
 
+   }
+   .container__search {
+    width: 500px;
+    height: 60px;
+    font-size: 36px;
+   }
+   .returnToCurrentGeo {
+    background-image: url('../assets/geo.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 60px;
+    height: 60px;
+    background-color: transparent;
+    position: relative;
+    top: 17px;
+    left: -10px;
+    padding: 2px;
+    /* border: 1px solid white; */
+    border: none;
+
+   }
+   .returnToCurrentGeo:hover {
+    cursor: pointer;
+   }
+   .container__search__btn {
+    width: 80px;
+    height: 66px;
+    position: relative;
+    top: -5px;
+    font-size: 20px;
    }
 }
 
