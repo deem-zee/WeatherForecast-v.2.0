@@ -3,7 +3,7 @@
         <div class="container">
             <button @click="currentGeoWeather" class="returnToCurrentGeo"></button>
             <input type="text" placeholder="поиск" class="container__search" v-model="search" @keyup.enter="searchForCity">
-            <button @click="searchForCity" class="container__search__btn">найти!</button>
+            <button @click="searchForCity" class="container__search__btn"></button>
             <div id="geo"><h2>{{data.city}}</h2></div>
             <div id="mainInfo">
                 <div id="temp"><p>{{tempSign}} {{data.currentTemp}}</p><span class="celsius" >&#xb0;</span></div>
@@ -64,8 +64,7 @@ export default {
                 sunset: '',
             },
             search: '',
-            citiesFound: [],
-            
+            citiesFound: [], 
             futureWeather: [],
             futureWeatherHide: false,
              
@@ -315,11 +314,19 @@ export default {
     cursor: pointer;
    }
    .container__search__btn {
-    width: 50px;
-    height: 35px;
+    width: 40px;
+    height: 36px;
     position: relative;
-    top: -2px;
+    top: 10px;
     font-size: 13px;
+    background-image: url('../assets/search--v1.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    border: 1px solid black;
+
+   }
+   .container__search__btn:hover {
+    cursor: pointer;
    }
 
 }
@@ -512,7 +519,6 @@ export default {
     top: 10px;
     left: -10px;
     padding: 2px;
-    /* border: 1px solid white; */
     border: none;
 
    }
@@ -520,11 +526,18 @@ export default {
     cursor: pointer;
    }
    .container__search__btn {
-    width: 80px;
+    width: 50px;
     height: 46px;
     position: relative;
-    top: -3px;
+    top: 12px;
     font-size: 18px;
+    background-image: url('../assets/search--v1.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    border: 1px solid black;
+   }
+   .container__search__btn:hover {
+    cursor: pointer;
    }
 
 }
@@ -566,11 +579,18 @@ export default {
     cursor: pointer;
    }
    .container__search__btn {
-    width: 80px;
+    width: 66px;
     height: 66px;
     position: relative;
-    top: -5px;
+    top: 18px;
     font-size: 20px;
+    background-image: url('../assets/search--v1.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    border: 1px solid black;
+   }
+   .container__search__btn:hover {
+    cursor: pointer;
    }
 }
 
