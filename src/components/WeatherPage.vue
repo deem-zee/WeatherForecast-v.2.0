@@ -2,16 +2,15 @@
     <div id="component">
         <div class="container">
             <button @click="currentGeoWeather" class="returnToCurrentGeo"></button>
-            <!-- <img src="../assets/geo.png" alt=""> -->
             <input type="text" placeholder="поиск" class="container__search" v-model="search" @keyup.enter="searchForCity">
             <button @click="searchForCity" class="container__search__btn">найти!</button>
-            <div id="geo"><h2>{{city}}</h2></div>
+            <div id="geo"><h2>{{data.city}}</h2></div>
             <div id="mainInfo">
-                <div id="temp"><p>{{tempSign}} {{currentTemp}}</p><span class="celsius" >&#xb0;</span></div>
-                 <div id="icon"><img :src= "icon" alt=""></div>
+                <div id="temp"><p>{{tempSign}} {{data.currentTemp}}</p><span class="celsius" >&#xb0;</span></div>
+                 <div id="icon"><img :src= "data.icon" alt=""></div>
             </div>
             
-            <p id="description">{{description}}</p>
+            <p id="description">{{data.description}}</p>
             <p id="feelsLike">Ощущается как: {{feelsLikeSign}}<span>&#xb0;</span></p>
         </div>  
 
@@ -26,8 +25,8 @@
 
         <div id="addInfo">  
             <div id="pressure" class="addInfo-div"> <img src="../assets/barometer.png" alt=""> <p>{{pascalToHg}} мм. рт. ст.</p></div>
-            <div id="humidity" class="addInfo-div"><img src="../assets/Hygrometer.png" alt=""><p> {{humidity}}%</p></div>
-            <div id="wind" class="addInfo-div"> <img src="../assets/wind.png" alt="" > <p>{{wind}} м/c</p></div>
+            <div id="humidity" class="addInfo-div"><img src="../assets/Hygrometer.png" alt=""><p> {{data.humidity}}%</p></div>
+            <div id="wind" class="addInfo-div"> <img src="../assets/wind.png" alt="" > <p>{{data.wind}} м/c</p></div>
         </div>
 
        
@@ -42,7 +41,8 @@
 
 <script>
 
-import { format } from 'date-fns'
+
+import {dataGetter, searchedCityData, futureWeatherGetter} from '../modules/dataGetter.js'
 const coefPsToHg = 0.750063755419211;
 
 export default {
@@ -50,20 +50,22 @@ export default {
         'header',
     ],
     data() {
-        return {// eslint-disable-next-line
-            data: {},
-            city: '',
-            icon: '',
+        return {
+            data: {
+                city: '',
+                icon: '',
+                feelsLike: null,
+                description: '',
+                currentTemp: '',
+                humidity: '',
+                pressure: '',
+                wind: '',
+                sunrise: '',
+                sunset: '',
+            },
             search: '',
             citiesFound: [],
-            feelsLike: null,
-            description: '',
-            currentTemp: '',
-            humidity: '',
-            pressure: '',
-            wind: '',
-            sunrise: '',
-            sunset: '',
+            
             futureWeather: [],
             futureWeatherHide: false,
              
@@ -76,18 +78,7 @@ export default {
                 fetch(`https://api.openweathermap.org/data/2.5/weather?q=${this.search}&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru`)
                 .then(result => result.json())
                 .then(data => {
-                console.log(data);
-                this.data = data;
-                this.icon = `http://openweathermap.org/img/wn/${this.data.weather[0].icon}@2x.png`;
-                this.feelsLike = Math.round(data.main.feels_like);
-                this.currentTemp = Math.round(data.main.temp)
-                this.description = data.weather[0].description;
-                this.humidity = data.main.humidity;
-                this.city = `${data.name}, ${data.sys.country}`;
-                this.pressure = data.main.pressure;
-                this.wind = data.wind.speed;
-                this.sunrise = new Date(data.sys.sunrise * 1000);
-                this.sunset = new Date(data.sys.sunset * 1000);
+                this.data = searchedCityData(data);
                 this.futureWeatherHide = true;
                 }); 
             }
@@ -98,48 +89,32 @@ export default {
             this.futureWeatherHide = false;
             this.futureWeather = [];
             fetch('http://api.openweathermap.org/data/2.5/forecast?id=524901&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru')
-        .then(result => result.json())
-        .then(data => {
-            this.data = data;
-            this.icon = `http://openweathermap.org/img/wn/${this.data.list[0].weather[0].icon}@2x.png`;
-            this.feelsLike = Math.round(data.list[0].main.feels_like);
-            this.currentTemp = Math.round(data.list[0].main.temp)
-            this.description = data.list[0].weather[0].description;
-            this.humidity = data.list[0].main.humidity;
-            this.city = data.city.name;
-            this.pressure = data.list[0].main.pressure;
-            this.wind = data.list[0].wind.speed;
-            this.sunrise = new Date(data.city.sunrise * 1000);
-            this.sunset = new Date(data.city.sunset * 1000);
-            for(let i = 1; i < 6; i++) {
-                let day = {
-                    temp: data.list[i].main.temp,
-                    time: format(new Date(data.list[i].dt_txt), "HH:mm"),
-                    img: data.list[i].weather[0].icon
-                }
-                this.futureWeather.push(day);
-            }
+            .then(result => result.json())
+            .then(data => {
+            this.data = dataGetter(data);
+            this.futureWeather =  futureWeatherGetter(data);
+            this.search = '';
         });      
         }
     },
 
     computed: {
         feelsLikeSign() {
-            return this.feelsLike > 0 ?  '+' + this.feelsLike : this.feelsLike < 0 ?
-             '-' + this.feelsLike : this.feelsLike;
+            return this.data.feelsLike > 0 ?  '+' + this.data.feelsLike : this.data.feelsLike < 0 ?
+             '-' + this.data.feelsLike : this.data.feelsLike;
         },
         tempSign() {
-            return this.currentTemp > 0 ?  '+'  : this.currentTemp > 0 ? 
+            return this.data.currentTemp > 0 ?  '+'  : this.data.currentTemp > 0 ? 
              '-' : '';
         },
         pascalToHg() {
-            return Math.round(this.pressure * coefPsToHg);
+            return Math.round(this.data.pressure * coefPsToHg);
         },
         getSunrise() {
-            return this.sunrise.toString().split(' ')[4];
+            return this.data.sunrise.toString().split(' ')[4];
         },
         getSunset() {
-            return this.sunset.toString().split(' ')[4];
+            return this.data.sunset.toString().split(' ')[4];
         },
 
     },
@@ -149,25 +124,8 @@ export default {
         fetch('http://api.openweathermap.org/data/2.5/forecast?id=524901&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru')
         .then(result => result.json())
         .then(data => {
-            this.data = data;
-            this.icon = `http://openweathermap.org/img/wn/${this.data.list[0].weather[0].icon}@2x.png`;
-            this.feelsLike = Math.round(data.list[0].main.feels_like);
-            this.currentTemp = Math.round(data.list[0].main.temp)
-            this.description = data.list[0].weather[0].description;
-            this.humidity = data.list[0].main.humidity;
-            this.city = data.city.name;
-            this.pressure = data.list[0].main.pressure;
-            this.wind = data.list[0].wind.speed;
-            this.sunrise = new Date(data.city.sunrise * 1000);
-            this.sunset = new Date(data.city.sunset * 1000);
-            for(let i = 1; i < 6; i++) {
-                let day = {
-                    temp: data.list[i].main.temp,
-                    time: format(new Date(data.list[i].dt_txt), "HH:mm"),
-                    img: data.list[i].weather[0].icon
-                }
-                this.futureWeather.push(day);
-            }
+            this.data = dataGetter(data);
+            this.futureWeather =  futureWeatherGetter(data);
         });      
     },
 }
