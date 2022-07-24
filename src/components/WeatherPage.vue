@@ -72,28 +72,30 @@ export default {
     },
     
     methods: {
-        searchForCity() {
-            if(this.search !== '') {
-                fetch(`https://api.openweathermap.org/data/2.5/weather?q=${this.search}&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru`)
-                .then(result => result.json())
-                .then(data => {
-                this.data = searchedCityData(data);
-                this.futureWeatherHide = true;
-                }); 
+        async searchForCity() {
+            if(this.search !== '') {  
+                try {
+                    let response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${this.search}&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru`)
+                    let result = await response.json()
+                    this.data = searchedCityData(result);
+                    this.futureWeatherHide = true;
+                } catch(e) {
+                    alert("В нашей базе нет такого населенного пункта");
+                    this.search = '';
+                }
+                
             }
-            
         
         },
-        currentGeoWeather() {
+        async currentGeoWeather() {
             this.futureWeatherHide = false;
             this.futureWeather = [];
-            fetch('http://api.openweathermap.org/data/2.5/forecast?id=524901&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru')
-            .then(result => result.json())
-            .then(data => {
-            this.data = dataGetter(data);
-            this.futureWeather =  futureWeatherGetter(data);
+            let response = await fetch('http://api.openweathermap.org/data/2.5/forecast?id=524901&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru')
+            let result = await response.json();
+            this.data = dataGetter(result);
+            this.futureWeather =  futureWeatherGetter(result);
             this.search = '';
-        });      
+              
         }
     },
 
@@ -117,15 +119,11 @@ export default {
         },
 
     },
-    created() {
-        
-        
-        fetch('http://api.openweathermap.org/data/2.5/forecast?id=524901&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru')
-        .then(result => result.json())
-        .then(data => {
-            this.data = dataGetter(data);
-            this.futureWeather =  futureWeatherGetter(data);
-        });      
+    async created() {
+            let response = await fetch('http://api.openweathermap.org/data/2.5/forecast?id=524901&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru')
+            let result = await response.json()
+            this.data = dataGetter(result);
+            this.futureWeather =  futureWeatherGetter(result);    
     },
 }
 </script>
