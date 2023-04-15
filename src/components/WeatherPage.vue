@@ -78,7 +78,7 @@ export default {
                     let response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${this.search}&appid=31753a5ec52cae14dffa4cadc0a2b489&units=metric&lang=ru`)
                     let result = await response.json()
                     this.data = searchedCityData(result);
-                    this.futureWeatherHide = true;
+                    // this.futureWeatherHide = true;
                 } catch(e) {
                     alert("В нашей базе нет такого населенного пункта");
                     this.search = '';
@@ -101,8 +101,9 @@ export default {
 
     computed: {
         feelsLikeSign() {
-            return this.data.feelsLike > 0 ?  '+' + this.data.feelsLike : this.data.feelsLike < 0 ?
-             '-' + this.data.feelsLike : this.data.feelsLike;
+            return this.data.feelsLike > 0 ?  '+' + this.data.feelsLike : this.data.feelsLike;
+            // return this.data.feelsLike > 0 ?  '+' + this.data.feelsLike : this.data.feelsLike < 0 ?
+            //  '-' + this.data.feelsLike : this.data.feelsLike;
         },
         tempSign() {
             return this.data.currentTemp > 0 ?  '+'  : this.data.currentTemp > 0 ? 
